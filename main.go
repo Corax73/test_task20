@@ -13,6 +13,7 @@ type Data struct {
 func main() {
 	customLog.LogInit("./logs/app.log")
 	model := models.Model{}
-	model.SetTable("tasks")
+	model.SetTable("test")
 	fmt.Println(model.CheckModelTable())
+	fmt.Println(model.RunTableMigration())
 }

@@ -1,8 +1,8 @@
 package models
 
 import (
+	"database/sql"
 	"os"
-	"songLibrary/customDb"
 	"songLibrary/customLog"
 	"songLibrary/utils"
 	"strings"
@@ -21,12 +21,17 @@ func (model *Model) SetTable(tableTitle string) {
 	model.table = tableTitle
 }
 
-func (model *Model) CheckModelTable() bool {
-	var resp bool
-	if model.table != "" {
-		db := customDb.GetConnect()
-		defer customDb.CloseConnect(db)
+func (model *Model) Fields() map[string]string {
+	return model.fields
+}
 
+func (model *Model) SetFields(fields map[string]string) {
+	model.fields = fields
+}
+
+func (model *Model) CheckModelTable(db *sql.DB) bool {
+	var resp bool
+	if model.Table() != "" {
 		queryStr := utils.ConcatSlice([]string{
 			"SELECT EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = '",
 			model.Table(),
@@ -46,13 +51,11 @@ func (model *Model) CheckModelTable() bool {
 	return resp
 }
 
-func (model *Model) RunTableMigration() bool {
+func (model *Model) RunTableMigration(db *sql.DB) bool {
 	var resp bool
-	if !model.CheckModelTable() {
+	if !model.CheckModelTable(db) {
 		query := model.loadSQLFile(utils.ConcatSlice([]string{model.table, "_up.sql"}))
 		if query != "" {
-			db := customDb.GetConnect()
-			defer customDb.CloseConnect(db)
 			tx, err := db.Begin()
 			if err != nil {
 				customLog.Logging(err)

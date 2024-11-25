@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"songLibrary/customDb"
 	"songLibrary/customLog"
 	"songLibrary/models"
 )
@@ -12,8 +13,17 @@ type Data struct {
 
 func main() {
 	customLog.LogInit("./logs/app.log")
-	model := models.Model{}
-	model.SetTable("test")
-	fmt.Println(model.CheckModelTable())
-	fmt.Println(model.RunTableMigration())
+	groupModel := (*&models.Group{}).Init()
+	songModel := (*&models.Song{}).Init()
+	modelsList := []*models.Model{
+		groupModel.Model,
+		songModel.Model,
+	}
+	var msg string
+	if customDb.Init(modelsList) {
+		msg = "tables exist"
+	} else {
+		msg = "check the logs"
+	}
+	fmt.Println(msg)
 }

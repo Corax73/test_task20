@@ -1,7 +1,3 @@
-CREATE TABLE IF NOT EXISTS "groups" (
-    "id" serial PRIMARY KEY,
-    "title" varchar NOT NULL UNIQUE
-);
 CREATE TABLE IF NOT EXISTS "songs" (
     "id" serial PRIMARY KEY,
     "group_id" int NOT NULL,

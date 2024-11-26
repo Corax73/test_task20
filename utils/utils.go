@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"reflect"
 	"songLibrary/customLog"
 	"strings"
 
@@ -29,6 +30,40 @@ func ConcatSlice(strSlice []string) string {
 		}
 		resp = strBuilder.String()
 		strBuilder.Reset()
+	}
+	return resp
+}
+
+func CompareMapsByStringKeys(map1, map2 map[string]string) bool {
+	var resp bool
+	len1 := len(map1)
+	len2 := len(map2)
+	if len1 == len2 {
+		keysSlice1 := GetMapKeys(map1)
+		keysSlice2 := GetMapKeys(map2)
+		resp = reflect.DeepEqual(keysSlice1, keysSlice2)
+	}
+	return resp
+}
+
+func GetMapKeys(mapArg map[string]string) []string {
+	var resp []string
+	if len(mapArg) > 0 {
+		for i := range mapArg {
+			resp = append(resp, i)
+		}
+	}
+	return resp
+}
+
+func GetMapValues(mapArg map[string]string) []string {
+	var resp []string
+	if len(mapArg) > 0 {
+		for _, value := range mapArg {
+			if value != "" {
+				resp = append(resp, value)
+			}
+		}
 	}
 	return resp
 }

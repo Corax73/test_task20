@@ -2,7 +2,10 @@ package models
 
 import (
 	"database/sql"
+	"fmt"
 	"os"
+	"slices"
+	"songLibrary/customDb"
 	"songLibrary/customLog"
 	"songLibrary/utils"
 	"strings"
@@ -10,7 +13,7 @@ import (
 
 type Model struct {
 	table  string
-	fields map[string]string
+	Fields map[string]string
 }
 
 func (model *Model) Table() string {
@@ -19,14 +22,6 @@ func (model *Model) Table() string {
 
 func (model *Model) SetTable(tableTitle string) {
 	model.table = tableTitle
-}
-
-func (model *Model) Fields() map[string]string {
-	return model.fields
-}
-
-func (model *Model) SetFields(fields map[string]string) {
-	model.fields = fields
 }
 
 func (model *Model) CheckModelTable(db *sql.DB) bool {
@@ -97,6 +92,43 @@ func (model *Model) loadSQLFile(fileName string) string {
 			}
 		} else {
 			customLog.Logging(err)
+		}
+	}
+	return resp
+}
+
+func (model *Model) Save() bool {
+	var resp bool
+	if len(model.Fields) > 0 {
+		strSlice := make([]string, 4+((len(model.Fields)-1)*2))
+		strSlice = append(strSlice, "INSERT INTO ")
+		strSlice = append(strSlice, model.Table())
+		strSlice = append(strSlice, " (")
+		fields := slices.Delete(utils.GetMapKeys(model.Fields), 0, 1)
+		strSlice = append(strSlice, strings.Trim(strings.Join(fields, ","), ","))
+		strSlice = append(strSlice, ") VALUES (")
+		values := utils.GetMapValues(model.Fields)
+		valuesToDb := make([]string, len(values))
+		for _, val := range values {
+			valuesToDb = append(valuesToDb, utils.ConcatSlice([]string{"'", val, "'"}))
+		}
+		strSlice = append(strSlice, strings.Trim(strings.Join(valuesToDb, ","), ","))
+		strSlice = append(strSlice, ");")
+
+		queryStr := utils.ConcatSlice(strSlice)
+		fmt.Println(queryStr)
+		db := customDb.GetConnect()
+		defer customDb.CloseConnect(db)
+		rows, err := db.Query(queryStr)
+		if err != nil {
+			customLog.Logging(err)
+		} else {
+			for rows.Next() {
+				err := rows.Scan(&resp)
+				if err != nil {
+					customLog.Logging(err)
+				}
+			}
 		}
 	}
 	return resp

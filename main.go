@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"songLibrary/customDb"
 	"songLibrary/customLog"
 	"songLibrary/models"
+	"songLibrary/repository"
 )
 
 type Data struct {
@@ -20,10 +20,12 @@ func main() {
 		songModel.Model,
 	}
 	var msg string
-	if customDb.Init(modelsList) {
+	if repository.Init(modelsList) {
 		msg = "tables exist"
 	} else {
 		msg = "check the logs"
 	}
 	fmt.Println(msg)
+
+	groupModel.Create(map[string]string{"id": "", "title": "test1"})
 }

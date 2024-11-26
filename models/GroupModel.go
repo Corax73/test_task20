@@ -1,5 +1,10 @@
 package models
 
+import (
+	"songLibrary/customDb"
+	"songLibrary/utils"
+)
+
 type Group struct {
 	*Model
 }
@@ -7,6 +12,15 @@ type Group struct {
 func (group *Group) Init() *Group {
 	model := Model{}
 	model.SetTable("groups")
-	model.SetFields(map[string]string{"id": "", "title": ""})
+	model.Fields = map[string]string{"id": "", "title": ""}
 	return &Group{&model}
+}
+
+func (group *Group) Create(fields map[string]string) {
+	if utils.CompareMapsByStringKeys(group.Fields, fields) {
+		group.Fields = fields
+		db := customDb.GetConnect()
+		defer customDb.CloseConnect(db)
+		group.Save()
+	}
 }

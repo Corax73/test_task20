@@ -5,6 +5,8 @@ import (
 	"songLibrary/customLog"
 	"songLibrary/models"
 	"songLibrary/repository"
+	"strconv"
+	"time"
 )
 
 type Data struct {
@@ -20,12 +22,12 @@ func main() {
 		songModel.Model,
 	}
 	var msg string
-	if repository.Init(modelsList) {
+	rep := repository.Repository{}
+	if rep.Init(modelsList) {
 		msg = "tables exist"
+		fmt.Println(groupModel.Create(map[string]string{"id": "", "title": strconv.Itoa(time.Now().Second())}))
 	} else {
 		msg = "check the logs"
 	}
 	fmt.Println(msg)
-
-	groupModel.Create(map[string]string{"id": "", "title": "test1"})
 }

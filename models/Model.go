@@ -2,7 +2,6 @@ package models
 
 import (
 	"database/sql"
-	"fmt"
 	"os"
 	"slices"
 	"songLibrary/customDb"
@@ -104,7 +103,9 @@ func (model *Model) Save() bool {
 		strSlice = append(strSlice, "INSERT INTO ")
 		strSlice = append(strSlice, model.Table())
 		strSlice = append(strSlice, " (")
-		fields := slices.Delete(utils.GetMapKeys(model.Fields), 0, 1)
+		fields := utils.GetMapKeys(model.Fields)
+		index := utils.GetIndexByStrValue(fields, "id")
+		fields = slices.Delete(fields, index, index+1)
 		strSlice = append(strSlice, strings.Trim(strings.Join(fields, ","), ","))
 		strSlice = append(strSlice, ") VALUES (")
 		values := utils.GetMapValues(model.Fields)
@@ -113,22 +114,16 @@ func (model *Model) Save() bool {
 			valuesToDb = append(valuesToDb, utils.ConcatSlice([]string{"'", val, "'"}))
 		}
 		strSlice = append(strSlice, strings.Trim(strings.Join(valuesToDb, ","), ","))
-		strSlice = append(strSlice, ");")
-
+		strSlice = append(strSlice, ") RETURNING id;")
 		queryStr := utils.ConcatSlice(strSlice)
-		fmt.Println(queryStr)
 		db := customDb.GetConnect()
 		defer customDb.CloseConnect(db)
-		rows, err := db.Query(queryStr)
+		var id int
+		err := db.QueryRow(queryStr).Scan(&id)
 		if err != nil {
 			customLog.Logging(err)
 		} else {
-			for rows.Next() {
-				err := rows.Scan(&resp)
-				if err != nil {
-					customLog.Logging(err)
-				}
-			}
+			resp = true
 		}
 	}
 	return resp

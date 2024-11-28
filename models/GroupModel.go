@@ -16,11 +16,13 @@ func (group *Group) Init() *Group {
 	return &Group{&model}
 }
 
-func (group *Group) Create(fields map[string]string) {
+func (group *Group) Create(fields map[string]string) bool {
+	var resp bool
 	if utils.CompareMapsByStringKeys(group.Fields, fields) {
 		group.Fields = fields
 		db := customDb.GetConnect()
 		defer customDb.CloseConnect(db)
-		group.Save()
+		resp = group.Save()
 	}
+	return resp
 }

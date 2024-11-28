@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"reflect"
+	"slices"
 	"songLibrary/customLog"
 	"strings"
 
@@ -41,7 +41,14 @@ func CompareMapsByStringKeys(map1, map2 map[string]string) bool {
 	if len1 == len2 {
 		keysSlice1 := GetMapKeys(map1)
 		keysSlice2 := GetMapKeys(map2)
-		resp = reflect.DeepEqual(keysSlice1, keysSlice2)
+		check := true
+		for _, val := range keysSlice1 {
+			if !slices.Contains(keysSlice2, val) {
+				check = false
+				break
+			}
+		}
+		resp = check
 	}
 	return resp
 }
@@ -63,6 +70,17 @@ func GetMapValues(mapArg map[string]string) []string {
 			if value != "" {
 				resp = append(resp, value)
 			}
+		}
+	}
+	return resp
+}
+
+func GetIndexByStrValue(data []string, value string) int {
+	resp := -1
+	for i, val := range data {
+		if val == value {
+			resp = i
+			break
 		}
 	}
 	return resp

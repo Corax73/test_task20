@@ -2,9 +2,12 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
 	"songLibrary/customLog"
 	"songLibrary/models"
 	"songLibrary/repository"
+	"songLibrary/router"
 	"strconv"
 	"time"
 )
@@ -30,4 +33,6 @@ func main() {
 		msg = "check the logs"
 	}
 	fmt.Println(msg)
+	r := (*&router.Router{}).Init()
+	log.Fatal(http.ListenAndServe(":8000", r))
 }

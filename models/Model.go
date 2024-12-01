@@ -8,7 +8,6 @@ import (
 	"songLibrary/customLog"
 	"songLibrary/utils"
 	"strings"
-	"time"
 )
 
 type Model struct {
@@ -132,7 +131,7 @@ func (model *Model) Save() bool {
 }
 
 func (model *Model) GetOne(id int) map[string]interface{} {
-	resp := map[string]interface{}{}
+	resp := map[string]interface{}{"success": false, "error": "not found"}
 	if id > 0 {
 		db := customDb.GetConnect()
 		defer customDb.CloseConnect(db)
@@ -145,54 +144,9 @@ func (model *Model) GetOne(id int) map[string]interface{} {
 		if err != nil {
 			customLog.Logging(err)
 		} else {
-			if data := model.SqlToMap(rows); len(data) > 0 {
+			if data := utils.SqlToMap(rows); len(data) > 0 {
 				resp = data[0]
 			}
-		}
-	}
-	return resp
-}
-
-func (model *Model) SqlToMap(rows *sql.Rows) []map[string]interface{} {
-	resp := make([]map[string]interface{}, 0)
-	columns, err := rows.Columns()
-	if err != nil {
-		customLog.Logging(err)
-	} else {
-		scanArgs := make([]interface{}, len(columns))
-		values := make([]interface{}, len(columns))
-		for i := range values {
-			scanArgs[i] = &values[i]
-		}
-		for rows.Next() {
-			err = rows.Scan(scanArgs...)
-			if err != nil {
-				customLog.Logging(err)
-			}
-			record := make(map[string]interface{})
-			for i, col := range values {
-				if col != nil {
-					switch col.(type) {
-					case bool:
-						record[columns[i]] = col.(bool)
-					case int:
-						record[columns[i]] = col.(int)
-					case int64:
-						record[columns[i]] = col.(int64)
-					case float64:
-						record[columns[i]] = col.(float64)
-					case string:
-						record[columns[i]] = col.(string)
-					case time.Time:
-						record[columns[i]] = col.(time.Time)
-					case []byte:
-						record[columns[i]] = string(col.([]byte))
-					default:
-						record[columns[i]] = col
-					}
-				}
-			}
-			resp = append(resp, record)
 		}
 	}
 	return resp

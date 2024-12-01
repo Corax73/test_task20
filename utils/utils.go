@@ -1,9 +1,11 @@
 package utils
 
 import (
+	"database/sql"
 	"slices"
 	"songLibrary/customLog"
 	"strings"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -81,6 +83,51 @@ func GetIndexByStrValue(data []string, value string) int {
 		if val == value {
 			resp = i
 			break
+		}
+	}
+	return resp
+}
+
+func SqlToMap(rows *sql.Rows) []map[string]interface{} {
+	resp := make([]map[string]interface{}, 0)
+	columns, err := rows.Columns()
+	if err != nil {
+		customLog.Logging(err)
+	} else {
+		scanArgs := make([]interface{}, len(columns))
+		values := make([]interface{}, len(columns))
+		for i := range values {
+			scanArgs[i] = &values[i]
+		}
+		for rows.Next() {
+			err = rows.Scan(scanArgs...)
+			if err != nil {
+				customLog.Logging(err)
+			}
+			record := make(map[string]interface{})
+			for i, col := range values {
+				if col != nil {
+					switch col.(type) {
+					case bool:
+						record[columns[i]] = col.(bool)
+					case int:
+						record[columns[i]] = col.(int)
+					case int64:
+						record[columns[i]] = col.(int64)
+					case float64:
+						record[columns[i]] = col.(float64)
+					case string:
+						record[columns[i]] = col.(string)
+					case time.Time:
+						record[columns[i]] = col.(time.Time)
+					case []byte:
+						record[columns[i]] = string(col.([]byte))
+					default:
+						record[columns[i]] = col
+					}
+				}
+			}
+			resp = append(resp, record)
 		}
 	}
 	return resp

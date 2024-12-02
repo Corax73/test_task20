@@ -41,8 +41,8 @@ func CompareMapsByStringKeys(map1, map2 map[string]string) bool {
 	len1 := len(map1)
 	len2 := len(map2)
 	if len1 == len2 {
-		keysSlice1 := GetMapKeys(map1)
-		keysSlice2 := GetMapKeys(map2)
+		keysSlice1 := GetMapKeysWithValue(map1)
+		keysSlice2 := GetMapKeysWithValue(map2)
 		check := true
 		for _, val := range keysSlice1 {
 			if !slices.Contains(keysSlice2, val) {
@@ -55,11 +55,13 @@ func CompareMapsByStringKeys(map1, map2 map[string]string) bool {
 	return resp
 }
 
-func GetMapKeys(mapArg map[string]string) []string {
+func GetMapKeysWithValue(mapArg map[string]string) []string {
 	var resp []string
 	if len(mapArg) > 0 {
-		for i := range mapArg {
-			resp = append(resp, i)
+		for key, val := range mapArg {
+			if val != "" {
+				resp = append(resp, key)
+			}
 		}
 	}
 	return resp

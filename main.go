@@ -13,10 +13,6 @@ import (
 	"github.com/savioxavier/termlink"
 )
 
-type Data struct {
-	Title string
-}
-
 func main() {
 	customLog.LogInit("./logs/app.log")
 	groupModel := (*&models.Group{}).Init()

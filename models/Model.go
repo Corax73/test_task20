@@ -97,16 +97,29 @@ func (model *Model) loadSQLFile(fileName string) string {
 	return resp
 }
 
-func (model *Model) Save() bool {
-	var resp bool
+func (model *Model) Create(fields map[string]string) map[string]string {
+	response := map[string]string{}
+	if utils.CompareMapsByStringKeys(model.Fields, fields) {
+		model.Fields = fields
+		db := customDb.GetConnect()
+		defer customDb.CloseConnect(db)
+		response = model.Save()
+	}
+	return response
+}
+
+func (model *Model) Save() map[string]string {
+	response := map[string]string{}
 	if len(model.Fields) > 0 {
 		strSlice := make([]string, 4+((len(model.Fields)-1)*2))
 		strSlice = append(strSlice, "INSERT INTO ")
 		strSlice = append(strSlice, model.Table())
 		strSlice = append(strSlice, " (")
-		fields := utils.GetMapKeys(model.Fields)
+		fields := utils.GetMapKeysWithValue(model.Fields)
 		index := utils.GetIndexByStrValue(fields, "id")
-		fields = slices.Delete(fields, index, index+1)
+		if index != -1 {
+			fields = slices.Delete(fields, index, index+1)
+		}
 		strSlice = append(strSlice, strings.Trim(strings.Join(fields, ","), ","))
 		strSlice = append(strSlice, ") VALUES (")
 		values := utils.GetMapValues(model.Fields)
@@ -119,18 +132,18 @@ func (model *Model) Save() bool {
 		queryStr := utils.ConcatSlice(strSlice)
 		db := customDb.GetConnect()
 		defer customDb.CloseConnect(db)
-		var id int
+		var id string
 		err := db.QueryRow(queryStr).Scan(&id)
 		if err != nil {
 			customLog.Logging(err)
 		} else {
-			resp = true
+			response = map[string]string{"id": id}
 		}
 	}
-	return resp
+	return response
 }
 
-func (model *Model) GetOne(id int) map[string]interface{} {
+func (model *Model) GetOneById(id int) map[string]interface{} {
 	resp := map[string]interface{}{"success": false, "error": "not found"}
 	if id > 0 {
 		db := customDb.GetConnect()
@@ -141,6 +154,28 @@ func (model *Model) GetOne(id int) map[string]interface{} {
 			" WHERE id=$1;",
 		})
 		rows, err := db.Query(queryStr, id)
+		if err != nil {
+			customLog.Logging(err)
+		} else {
+			if data := utils.SqlToMap(rows); len(data) > 0 {
+				resp = data[0]
+			}
+		}
+	}
+	return resp
+}
+
+func (model *Model) GetOneByTitle(requestData map[string]string) map[string]interface{} {
+	resp := map[string]interface{}{"success": false, "error": "not found"}
+	if title, ok := requestData["title"]; ok && title != "" {
+		db := customDb.GetConnect()
+		defer customDb.CloseConnect(db)
+		queryStr := utils.ConcatSlice([]string{
+			"SELECT * FROM ",
+			model.Table(),
+			" WHERE title=$1;",
+		})
+		rows, err := db.Query(queryStr, requestData["title"])
 		if err != nil {
 			customLog.Logging(err)
 		} else {

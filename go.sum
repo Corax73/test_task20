@@ -1,3 +1,5 @@
+github.com/duktig-solutions/go-random-date-generator v0.0.0-20220823170630-1c67478b7653 h1:2EZ5rrSymt9pArv6CPN/HwyDV38OJw2LFEl8cI2kWCo=
+github.com/duktig-solutions/go-random-date-generator v0.0.0-20220823170630-1c67478b7653/go.mod h1:X6rk17Lfv4H8SeC2dE3G2IhBmhbqQFJzmPTB0MzwihM=
 github.com/gorilla/mux v1.8.1 h1:TuBL49tXwgrFYWhqrNgrUNEY92u81SPhu7sTdzQEiWY=
 github.com/gorilla/mux v1.8.1/go.mod h1:AKf9I4AEqPTmMytcMc0KkNouC66V3BtZ4qD5fmWSiMQ=
 github.com/joho/godotenv v1.5.1 h1:7eLL/+HRGLY0ldzfGMeQkb7vMd0as4CfYvUVzLqw0N0=

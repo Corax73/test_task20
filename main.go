@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"songLibrary/customLog"
+	extapi "songLibrary/extApi"
 	"songLibrary/models"
 	"songLibrary/repository"
 	"songLibrary/router"
@@ -40,16 +41,42 @@ func main() {
 		defer wg.Done()
 	}(errChan, r)
 
-	check := true
-	var invitationPrinted bool
-	for check {
-		if len(errChan) > 0 {
-			fmt.Println(<-errChan)
-			check = false
+	go func() {
+		check := true
+		var invitationPrinted bool
+		for check {
+			if len(errChan) > 0 {
+				fmt.Println(<-errChan)
+				check = false
+			} else {
+				if !invitationPrinted {
+					fmt.Println(strings.Join([]string{"started ", termlink.Link("http://localhost:8000", "http://localhost:8000")}, " "))
+					invitationPrinted = true
+				}
+			}
+		}
+	}()
+
+	rExt := (*&extapi.ExtRouter{}).Init()
+	errChanExt := make(chan error, 1)
+	defer close(errChanExt)
+	defer wg.Wait()
+	wg.Add(1)
+	go func(errChanExt chan<- error, handler http.Handler) {
+		errChanExt <- http.ListenAndServe(":8082", handler)
+		defer wg.Done()
+	}(errChan, rExt)
+
+	checkExt := true
+	var invitationPrintedExt bool
+	for checkExt {
+		if len(errChanExt) > 0 {
+			fmt.Println(<-errChanExt)
+			checkExt = false
 		} else {
-			if !invitationPrinted {
-				fmt.Println(strings.Join([]string{"started ", termlink.Link("http://localhost:8000", "http://localhost:8000")}, " "))
-				invitationPrinted = true
+			if !invitationPrintedExt {
+				fmt.Println(strings.Join([]string{"started ", termlink.Link("http://localhost:8082", "http://localhost:8082")}, " "))
+				invitationPrintedExt = true
 			}
 		}
 	}

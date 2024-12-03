@@ -186,3 +186,11 @@ func (model *Model) GetOneByTitle(requestData map[string]string) map[string]inte
 	}
 	return resp
 }
+
+func (model *Model) CheckInterface(v interface{}) bool {
+	var resp bool
+	if _, ok := v.(HasEvent); ok {
+		resp = true
+	}
+	return resp
+}

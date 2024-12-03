@@ -1,8 +1,10 @@
 package router
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"songLibrary/customLog"
 	"songLibrary/models"
@@ -100,6 +102,26 @@ func (router *Router) CreateSong(w http.ResponseWriter, r *http.Request) {
 				response["data"] = "Error.Try again"
 			} else {
 				response["id"] = id
+
+				if songModel.CheckInterface(songModel) {
+					resp, err := http.Get(utils.ConcatSlice([]string{"http://localhost:8082/", group, "/", song}))
+					if err != nil {
+						customLog.Logging(err)
+					} else {
+						body, err := io.ReadAll(resp.Body)
+						if err == nil {
+							defer resp.Body.Close()
+							var prettyJSON bytes.Buffer
+							if err := json.Indent(&prettyJSON, []byte(body), "", "    "); err == nil {
+								fmt.Println(prettyJSON.String())
+							} else {
+								fmt.Println(err)
+								customLog.Logging(err)
+							}
+						}
+
+					}
+				}
 			}
 		} else {
 			response["error"] = "Check parameters"

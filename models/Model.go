@@ -143,6 +143,14 @@ func (model *Model) Save() map[string]string {
 	return response
 }
 
+func (model *Model) Update(fields map[string]string, id string) map[string]string {
+	response := map[string]string{}
+	if utils.CompareMapsByStringKeys(model.Fields, fields) {
+		// @todo
+	}
+	return response
+}
+
 func (model *Model) GetOneById(id int) map[string]interface{} {
 	resp := map[string]interface{}{"success": false, "error": "not found"}
 	if id > 0 {

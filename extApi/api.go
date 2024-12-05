@@ -19,7 +19,7 @@ type ExtRouter struct {
 
 func (router *ExtRouter) Init() *ExtRouter {
 	r := mux.NewRouter()
-	r.HandleFunc("/info/{group:[a-zA-Z0-9]+}/{song:[a-zA-Z0-9]+}", router.getOneSongs).Methods("GET")
+	r.HandleFunc("/info/{group:[a-zA-Z0-9\\s]+}/{song:[a-zA-Z0-9\\s]+}", router.getOneSongs).Methods("GET")
 	return &ExtRouter{r}
 }
 

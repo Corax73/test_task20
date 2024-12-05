@@ -1,10 +1,9 @@
 package router
 
 import (
-	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"songLibrary/customLog"
 	"songLibrary/models"
@@ -102,24 +101,32 @@ func (router *Router) CreateSong(w http.ResponseWriter, r *http.Request) {
 				response["data"] = "Error.Try again"
 			} else {
 				response["id"] = id
-
 				if songModel.CheckInterface(songModel) {
-					resp, err := http.Get(utils.ConcatSlice([]string{"http://localhost:8082/", group, "/", song}))
+					resp, err := http.Get(utils.ConcatSlice([]string{"http://localhost:8082/info/", group, "/", song}))
 					if err != nil {
 						customLog.Logging(err)
 					} else {
-						body, err := io.ReadAll(resp.Body)
-						if err == nil {
-							defer resp.Body.Close()
-							var prettyJSON bytes.Buffer
-							if err := json.Indent(&prettyJSON, []byte(body), "", "    "); err == nil {
-								fmt.Println(prettyJSON.String())
-							} else {
-								fmt.Println(err)
-								customLog.Logging(err)
+						defer resp.Body.Close()
+						var data map[string]string
+						if err := json.NewDecoder(resp.Body).Decode(&data); err == nil {
+							fmt.Println(data)
+							result := songModel.Update(map[string]string{
+								"title":       song,
+								"group_id":    groupId,
+								"link":        data["link"],
+								"releaseDate": data["releaseDate"],
+								"text":        data["text"],
+							}, id)
+							if _, ok := result["id"]; !ok {
+								customLog.Logging(errors.New(utils.ConcatSlice([]string{
+									"error: error when trying to enrich a song",
+									"ID: ",
+									id,
+								})))
 							}
+						} else {
+							customLog.Logging(err)
 						}
-
 					}
 				}
 			}

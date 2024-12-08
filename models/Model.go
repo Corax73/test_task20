@@ -111,7 +111,7 @@ func (model *Model) Create(fields map[string]string) map[string]string {
 func (model *Model) Save() map[string]string {
 	response := map[string]string{}
 	if len(model.Fields) > 0 {
-		strSlice := make([]string, 4+((len(model.Fields)-1)*2))
+		strSlice := make([]string, 5+((len(model.Fields)-1)*2))
 		strSlice = append(strSlice, "INSERT INTO ")
 		strSlice = append(strSlice, model.Table())
 		strSlice = append(strSlice, " (")
@@ -124,8 +124,14 @@ func (model *Model) Save() map[string]string {
 		strSlice = append(strSlice, ") VALUES (")
 		values := utils.GetMapValues(model.Fields)
 		valuesToDb := make([]string, len(values))
-		for _, val := range values {
-			valuesToDb = append(valuesToDb, utils.ConcatSlice([]string{"'", val, "'"}))
+		for _, val := range fields {
+			if _, ok := model.Fields[val]; ok {
+				value := model.Fields[val]
+				if strings.Contains(value, "'") {
+					value = strings.Replace(value, "'", "''", -1)
+				}
+				valuesToDb = append(valuesToDb, utils.ConcatSlice([]string{"'", value, "'"}))
+			}
 		}
 		strSlice = append(strSlice, strings.Trim(strings.Join(valuesToDb, ","), ","))
 		strSlice = append(strSlice, ") RETURNING id;")
@@ -146,7 +152,49 @@ func (model *Model) Save() map[string]string {
 func (model *Model) Update(fields map[string]string, id string) map[string]string {
 	response := map[string]string{}
 	if utils.CompareMapsByStringKeys(model.Fields, fields) {
-		// @todo
+		strSlice := make([]string, 7+((len(fields)-1)*2))
+		strSlice = append(strSlice, "UPDATE ")
+		strSlice = append(strSlice, model.Table())
+		strSlice = append(strSlice, " SET (")
+		columns := utils.GetMapKeysWithValue(fields)
+		index := utils.GetIndexByStrValue(columns, "id")
+		if index != -1 {
+			columns = slices.Delete(columns, index, index+1)
+		}
+		index = utils.GetIndexByStrValue(columns, "title")
+		if index != -1 {
+			columns = slices.Delete(columns, index, index+1)
+		}
+		index = utils.GetIndexByStrValue(columns, "group_id")
+		if index != -1 {
+			columns = slices.Delete(columns, index, index+1)
+		}
+		strSlice = append(strSlice, strings.Trim(strings.Join(columns, ","), ","))
+		strSlice = append(strSlice, ") = (")
+		valuesToDb := make([]string, len(columns))
+		for _, val := range columns {
+			if _, ok := fields[val]; ok {
+				value := fields[val]
+				if strings.Contains(value, "'") {
+					value = strings.Replace(value, "'", "''", -1)
+				}
+				valuesToDb = append(valuesToDb, utils.ConcatSlice([]string{"'", value, "'"}))
+			}
+		}
+		strSlice = append(strSlice, strings.Trim(strings.Join(valuesToDb, ","), ","))
+		strSlice = append(strSlice, ") WHERE id = ")
+		strSlice = append(strSlice, id)
+		strSlice = append(strSlice, " RETURNING id;")
+		queryStr := utils.ConcatSlice(strSlice)
+		db := customDb.GetConnect()
+		defer customDb.CloseConnect(db)
+		var id string
+		err := db.QueryRow(queryStr).Scan(&id)
+		if err != nil {
+			customLog.Logging(err)
+		} else {
+			response = map[string]string{"id": id}
+		}
 	}
 	return response
 }

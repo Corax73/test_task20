@@ -58,12 +58,12 @@ func (router *ExtRouter) getOneSongs(w http.ResponseWriter, r *http.Request) {
 	params := router.initProcess(w, r, false)
 	if group, ok := params["group"]; ok {
 		if song, ok := params["song"]; ok {
-			response["releaseDate"] = "2024-11-28"
+			response["release_date"] = "2024-11-28"
 			randomDate, err := randomDataTime.GenerateDate("2000-08-01", "2024-08-01")
 			if err != nil {
 				customLog.Logging(err)
 			} else {
-				response["releaseDate"] = randomDate
+				response["release_date"] = randomDate
 			}
 			response["text"] = "Ooh baby, don't you know I suffer?\nOoh baby, can you hear me moan?\nYou caught me under false pretenses\nHow long before you let me go?\n\nOoh\nYou set my soul alight\nOoh\nYou set my soul alight"
 			response["link"] = utils.ConcatSlice([]string{"/", group, "/", song})

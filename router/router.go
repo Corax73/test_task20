@@ -94,7 +94,7 @@ func (router *Router) CreateSong(w http.ResponseWriter, r *http.Request) {
 				"title":       song,
 				"group_id":    groupId,
 				"link":        "",
-				"releaseDate": "",
+				"release_date": "",
 				"text":        "",
 			})
 			if id, ok := result["id"]; !ok {
@@ -109,12 +109,12 @@ func (router *Router) CreateSong(w http.ResponseWriter, r *http.Request) {
 						defer resp.Body.Close()
 						var data map[string]string
 						if err := json.NewDecoder(resp.Body).Decode(&data); err == nil {
-							fmt.Println(data)
 							result := songModel.Update(map[string]string{
+								"id": id,
 								"title":       song,
 								"group_id":    groupId,
 								"link":        data["link"],
-								"releaseDate": data["releaseDate"],
+								"release_date": data["release_date"],
 								"text":        data["text"],
 							}, id)
 							if _, ok := result["id"]; !ok {

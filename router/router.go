@@ -23,6 +23,7 @@ var response map[string]interface{}
 
 func (router *Router) Init() *Router {
 	r := mux.NewRouter()
+	r.HandleFunc("/songs/", router.getSongs).Methods("GET")
 	r.HandleFunc("/songs/{id:[0-9]+}", router.getOneSongs).Methods("GET")
 	r.HandleFunc("/songs/", router.CreateSong).Methods("POST")
 	return &Router{r}
@@ -36,6 +37,28 @@ func (router *Router) initProcess(w http.ResponseWriter, r *http.Request, isPost
 	}
 	if !isPost {
 		resp = mux.Vars(r)
+		sort := r.URL.Query().Get("sort")
+		if sort != "" {
+			var order string
+			splits := strings.Split(sort, "--")
+			requestField, requestOrder := splits[0], splits[1]
+			if requestOrder != "desc" && requestOrder != "asc" {
+				order = "desc"
+			} else {
+				order = requestOrder
+			}
+			resp["order"] = order
+			resp["orderBy"] = requestField
+		}
+		filter := r.URL.Query().Get("filter")
+		if filter != "" {
+			splits := strings.Split(filter, "--")
+			requestField, requestValue := splits[0], splits[1]
+			if requestValue != "" {
+				resp["filterBy"] = requestField
+				resp["filterVal"] = requestValue
+			}
+		}
 	} else {
 		err := json.NewDecoder(r.Body).Decode(&resp)
 		if err != nil {
@@ -56,6 +79,13 @@ func (router *Router) checkEnv() bool {
 
 func (router *Router) consoleOutput(r *http.Request) {
 	fmt.Println(strings.Join([]string{time.Now().Format(time.RFC3339), r.Method, r.RequestURI, r.UserAgent()}, " "))
+}
+
+func (router *Router) getSongs(w http.ResponseWriter, r *http.Request) {
+	params := router.initProcess(w, r, false)
+	songModel := (*&models.Song{}).Init()
+	response = map[string]interface{}{"data": songModel.GetList(params)}
+	json.NewEncoder(w).Encode(response)
 }
 
 func (router *Router) getOneSongs(w http.ResponseWriter, r *http.Request) {
@@ -90,12 +120,12 @@ func (router *Router) CreateSong(w http.ResponseWriter, r *http.Request) {
 		}
 		if song, ok := params["song"]; ok && song != "" {
 			result := songModel.Create(map[string]string{
-				"id":          "",
-				"title":       song,
-				"group_id":    groupId,
-				"link":        "",
+				"id":           "",
+				"title":        song,
+				"group_id":     groupId,
+				"link":         "",
 				"release_date": "",
-				"text":        "",
+				"text":         "",
 			})
 			if id, ok := result["id"]; !ok {
 				response["data"] = "Error.Try again"
@@ -110,12 +140,12 @@ func (router *Router) CreateSong(w http.ResponseWriter, r *http.Request) {
 						var data map[string]string
 						if err := json.NewDecoder(resp.Body).Decode(&data); err == nil {
 							result := songModel.Update(map[string]string{
-								"id": id,
-								"title":       song,
-								"group_id":    groupId,
-								"link":        data["link"],
+								"id":           id,
+								"title":        song,
+								"group_id":     groupId,
+								"link":         data["link"],
 								"release_date": data["release_date"],
-								"text":        data["text"],
+								"text":         data["text"],
 							}, id)
 							if _, ok := result["id"]; !ok {
 								customLog.Logging(errors.New(utils.ConcatSlice([]string{

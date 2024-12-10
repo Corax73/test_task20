@@ -199,6 +199,46 @@ func (model *Model) Update(fields map[string]string, id string) map[string]strin
 	return response
 }
 
+func (model *Model) GetList(params map[string]string) []map[string]interface{} {
+	var resp []map[string]interface{}
+	db := customDb.GetConnect()
+	defer customDb.CloseConnect(db)
+	queryStr := utils.ConcatSlice([]string{
+		"SELECT * FROM ",
+		model.Table(),
+	})
+	if filterBy, ok := params["filterBy"]; ok && filterBy != "" {
+		queryStr = utils.ConcatSlice([]string{
+			queryStr,
+			" WHERE ",
+			params["filterBy"],
+			" = '",
+			params["filterVal"],
+			"'",
+		})
+	}
+	if order, ok := params["order"]; ok && order != "" {
+		queryStr = utils.ConcatSlice([]string{
+			queryStr,
+			" ORDER BY ",
+			params["orderBy"],
+			" ",
+			params["order"],
+		})
+	}
+	queryStr = utils.ConcatSlice([]string{
+		queryStr,
+		" ;",
+	})
+	rows, err := db.Query(queryStr)
+	if err != nil {
+		customLog.Logging(err)
+	} else {
+		resp = utils.SqlToMap(rows)
+	}
+	return resp
+}
+
 func (model *Model) GetOneById(id int) map[string]interface{} {
 	resp := map[string]interface{}{"success": false, "error": "not found"}
 	if id > 0 {

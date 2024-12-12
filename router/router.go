@@ -41,23 +41,35 @@ func (router *Router) initProcess(w http.ResponseWriter, r *http.Request, isPost
 		if sort != "" {
 			var order string
 			splits := strings.Split(sort, "--")
-			requestField, requestOrder := splits[0], splits[1]
-			if requestOrder != "desc" && requestOrder != "asc" {
-				order = "desc"
-			} else {
-				order = requestOrder
+			if len(splits) > 1 {
+				requestField, requestOrder := splits[0], splits[1]
+				if requestOrder != "desc" && requestOrder != "asc" {
+					order = "desc"
+				} else {
+					order = requestOrder
+				}
+				resp["order"] = order
+				resp["orderBy"] = requestField
 			}
-			resp["order"] = order
-			resp["orderBy"] = requestField
 		}
 		filter := r.URL.Query().Get("filter")
 		if filter != "" {
 			splits := strings.Split(filter, "--")
-			requestField, requestValue := splits[0], splits[1]
-			if requestValue != "" {
-				resp["filterBy"] = requestField
-				resp["filterVal"] = requestValue
+			if len(splits) > 1 {
+				requestField, requestValue := splits[0], splits[1]
+				if requestValue != "" {
+					resp["filterBy"] = requestField
+					resp["filterVal"] = requestValue
+				}
 			}
+		}
+		limit := r.URL.Query().Get("limit")
+		if limit != "" {
+			resp["limit"] = limit
+		}
+		offset := r.URL.Query().Get("offset")
+		if offset != "" {
+			resp["offset"] = offset
 		}
 	} else {
 		err := json.NewDecoder(r.Body).Decode(&resp)

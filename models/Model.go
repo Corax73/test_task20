@@ -226,6 +226,20 @@ func (model *Model) GetList(params map[string]string) []map[string]interface{} {
 			params["order"],
 		})
 	}
+	if limit, ok := params["limit"]; ok && limit != "" {
+		queryStr = utils.ConcatSlice([]string{
+			queryStr,
+			" LIMIT ",
+			params["limit"],
+		})
+	}
+	if offset, ok := params["offset"]; ok && offset != "" {
+		queryStr = utils.ConcatSlice([]string{
+			queryStr,
+			" OFFSET ",
+			params["offset"],
+		})
+	}
 	queryStr = utils.ConcatSlice([]string{
 		queryStr,
 		" ;",

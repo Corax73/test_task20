@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"fmt"
 	"os"
 	"slices"
 	"songLibrary/customDb"
@@ -301,6 +302,29 @@ func (model *Model) CheckInterface(v interface{}) bool {
 	var resp bool
 	if _, ok := v.(HasEvent); ok {
 		resp = true
+	}
+	return resp
+}
+
+func (model *Model) Delete(id int) map[string]interface{} {
+	resp := map[string]interface{}{"success": false, "error": "not found"}
+	fmt.Println(id)
+	if id > 0 {
+		db := customDb.GetConnect()
+		defer customDb.CloseConnect(db)
+		queryStr := utils.ConcatSlice([]string{
+			"DELETE FROM ",
+			model.Table(),
+			" WHERE id=$1 RETURNING id;",
+		})
+		rows, err := db.Query(queryStr, id)
+		if err != nil {
+			customLog.Logging(err)
+		} else {
+			if data := utils.SqlToMap(rows); len(data) > 0 {
+				resp = data[0]
+			}
+		}
 	}
 	return resp
 }

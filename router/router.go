@@ -26,6 +26,7 @@ func (router *Router) Init() *Router {
 	r.HandleFunc("/songs/", router.getSongs).Methods("GET")
 	r.HandleFunc("/songs/{id:[0-9]+}", router.getOneSongs).Methods("GET")
 	r.HandleFunc("/songs/", router.CreateSong).Methods("POST")
+	r.HandleFunc("/songs/{id:[0-9]+}", router.deleteSong).Methods("DELETE")
 	return &Router{r}
 }
 
@@ -175,6 +176,19 @@ func (router *Router) CreateSong(w http.ResponseWriter, r *http.Request) {
 		} else {
 			response["error"] = "Check parameters"
 		}
+	}
+	json.NewEncoder(w).Encode(response)
+}
+
+func (router *Router) deleteSong(w http.ResponseWriter, r *http.Request) {
+	params := router.initProcess(w, r, false)
+	id, err := strconv.Atoi(params["id"])
+	fmt.Println(id)
+	if err != nil {
+		customLog.Logging(err)
+	} else {
+		songModel := (*&models.Song{}).Init()
+		response = map[string]interface{}{"data": songModel.Delete(id)}
 	}
 	json.NewEncoder(w).Encode(response)
 }

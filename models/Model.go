@@ -2,7 +2,6 @@ package models
 
 import (
 	"database/sql"
-	"fmt"
 	"os"
 	"slices"
 	"songLibrary/customDb"
@@ -308,7 +307,6 @@ func (model *Model) CheckInterface(v interface{}) bool {
 
 func (model *Model) Delete(id int) map[string]interface{} {
 	resp := map[string]interface{}{"success": false, "error": "not found"}
-	fmt.Println(id)
 	if id > 0 {
 		db := customDb.GetConnect()
 		defer customDb.CloseConnect(db)
@@ -323,6 +321,40 @@ func (model *Model) Delete(id int) map[string]interface{} {
 		} else {
 			if data := utils.SqlToMap(rows); len(data) > 0 {
 				resp = data[0]
+			}
+		}
+	}
+	return resp
+}
+
+func (model *Model) GetOneCouplet(id, couplet_number int) map[string]interface{} {
+	resp := map[string]interface{}{"success": false, "error": "not found"}
+	if id > 0 && couplet_number > 0 {
+		db := customDb.GetConnect()
+		defer customDb.CloseConnect(db)
+		queryStr := utils.ConcatSlice([]string{
+			"SELECT text FROM ",
+			model.Table(),
+			" WHERE id=$1 AND text IS NOT NULL;",
+		})
+		rows, err := db.Query(queryStr, id)
+		if err != nil {
+			customLog.Logging(err)
+		} else {
+			if data := utils.SqlToMap(rows); len(data) > 0 {
+				if value, ok := data[0]["text"]; ok && value != "" {
+					if text, ok := value.(string); ok {
+						couplets := strings.Split(string(text), "\n")
+						total := len(couplets)
+						if couplet_number-1 < total {
+							resp = map[string]interface{}{
+								"couplet_number": couplet_number,
+								"couplet":        couplets[couplet_number-1],
+								"total":          total,
+							}
+						}
+					}
+				}
 			}
 		}
 	}

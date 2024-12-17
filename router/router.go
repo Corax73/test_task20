@@ -27,53 +27,53 @@ func (router *Router) Init() *Router {
 	r.HandleFunc("/songs/{id:[0-9]+}", router.getOneSongs).Methods("GET")
 	r.HandleFunc("/songs/{id:[0-9]+}/couplet/{couplet_number:[0-9]+}", router.getOneCouplet).Methods("GET")
 	r.HandleFunc("/songs/", router.CreateSong).Methods("POST")
+	r.HandleFunc("/songs/{id:[0-9]+}", router.updateSong).Methods("PUT")
 	r.HandleFunc("/songs/{id:[0-9]+}", router.deleteSong).Methods("DELETE")
 	return &Router{r}
 }
 
-func (router *Router) initProcess(w http.ResponseWriter, r *http.Request, isPost bool) map[string]string {
+func (router *Router) initProcess(w http.ResponseWriter, r *http.Request, getPost bool) map[string]string {
 	var resp map[string]string
 	w.Header().Set("Content-Type", "application/json")
 	if router.checkEnv() {
 		router.consoleOutput(r)
 	}
-	if !isPost {
-		resp = mux.Vars(r)
-		sort := r.URL.Query().Get("sort")
-		if sort != "" {
-			var order string
-			splits := strings.Split(sort, "--")
-			if len(splits) > 1 {
-				requestField, requestOrder := splits[0], splits[1]
-				if requestOrder != "desc" && requestOrder != "asc" {
-					order = "desc"
-				} else {
-					order = requestOrder
-				}
-				resp["order"] = order
-				resp["orderBy"] = requestField
+	resp = mux.Vars(r)
+	sort := r.URL.Query().Get("sort")
+	if sort != "" {
+		var order string
+		splits := strings.Split(sort, "--")
+		if len(splits) > 1 {
+			requestField, requestOrder := splits[0], splits[1]
+			if requestOrder != "desc" && requestOrder != "asc" {
+				order = "desc"
+			} else {
+				order = requestOrder
+			}
+			resp["order"] = order
+			resp["orderBy"] = requestField
+		}
+	}
+	filter := r.URL.Query().Get("filter")
+	if filter != "" {
+		splits := strings.Split(filter, "--")
+		if len(splits) > 1 {
+			requestField, requestValue := splits[0], splits[1]
+			if requestValue != "" {
+				resp["filterBy"] = requestField
+				resp["filterVal"] = requestValue
 			}
 		}
-		filter := r.URL.Query().Get("filter")
-		if filter != "" {
-			splits := strings.Split(filter, "--")
-			if len(splits) > 1 {
-				requestField, requestValue := splits[0], splits[1]
-				if requestValue != "" {
-					resp["filterBy"] = requestField
-					resp["filterVal"] = requestValue
-				}
-			}
-		}
-		limit := r.URL.Query().Get("limit")
-		if limit != "" {
-			resp["limit"] = limit
-		}
-		offset := r.URL.Query().Get("offset")
-		if offset != "" {
-			resp["offset"] = offset
-		}
-	} else {
+	}
+	limit := r.URL.Query().Get("limit")
+	if limit != "" {
+		resp["limit"] = limit
+	}
+	offset := r.URL.Query().Get("offset")
+	if offset != "" {
+		resp["offset"] = offset
+	}
+	if getPost {
 		err := json.NewDecoder(r.Body).Decode(&resp)
 		if err != nil {
 			customLog.Logging(err)
@@ -206,6 +206,15 @@ func (router *Router) getOneCouplet(w http.ResponseWriter, r *http.Request) {
 			songModel := (*&models.Song{}).Init()
 			response = map[string]interface{}{"data": songModel.GetOneCouplet(id, couplet_number)}
 		}
+	}
+	json.NewEncoder(w).Encode(response)
+}
+
+func (router *Router) updateSong(w http.ResponseWriter, r *http.Request) {
+	params := router.initProcess(w, r, true)
+	if _, ok := params["id"]; ok {
+		songModel := (*&models.Song{}).Init()
+		response = map[string]interface{}{"data": songModel.Update(params, params["id"])}
 	}
 	json.NewEncoder(w).Encode(response)
 }

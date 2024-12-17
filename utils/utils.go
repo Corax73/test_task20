@@ -134,3 +134,38 @@ func SqlToMap(rows *sql.Rows) []map[string]interface{} {
 	}
 	return resp
 }
+
+func GetMapKeys(argMap map[string]string) []string {
+	resp := make([]string, len(argMap))
+	var i int
+	for k := range argMap {
+		resp[i] = k
+		i++
+	}
+	return resp
+}
+
+func PresenceMapKeysInOtherMap(map1, map2 map[string]string) bool {
+	var resp bool
+	keys1 := GetMapKeys(map1)
+	keys2 := GetMapKeys(map2)
+	check := true
+	for _, val := range keys1 {
+		if !slices.Contains(keys2, val) {
+			check = false
+			break
+		}
+	}
+	resp = check
+	return resp
+}
+
+func GetMapWithoutKeys(map1 map[string]string, exceptKeys []string) map[string]string {
+	resp := make(map[string]string, len(map1)-len(exceptKeys))
+	for k, v := range map1 {
+		if !slices.Contains(exceptKeys, k) {
+			resp[k] = v
+		}
+	}
+	return resp
+}

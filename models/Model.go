@@ -151,11 +151,15 @@ func (model *Model) Save() map[string]string {
 
 func (model *Model) Update(fields map[string]string, id string) map[string]string {
 	response := map[string]string{}
-	if utils.CompareMapsByStringKeys(model.Fields, fields) {
+	fields = utils.GetMapWithoutKeys(fields, []string{"id"})
+	if utils.PresenceMapKeysInOtherMap(fields, model.Fields) {
 		strSlice := make([]string, 7+((len(fields)-1)*2))
 		strSlice = append(strSlice, "UPDATE ")
 		strSlice = append(strSlice, model.Table())
-		strSlice = append(strSlice, " SET (")
+		strSlice = append(strSlice, " SET ")
+		if len(fields) > 1 {
+			strSlice = append(strSlice, "(")
+		}
 		columns := utils.GetMapKeysWithValue(fields)
 		index := utils.GetIndexByStrValue(columns, "id")
 		if index != -1 {
@@ -169,20 +173,33 @@ func (model *Model) Update(fields map[string]string, id string) map[string]strin
 		if index != -1 {
 			columns = slices.Delete(columns, index, index+1)
 		}
-		strSlice = append(strSlice, strings.Trim(strings.Join(columns, ","), ","))
-		strSlice = append(strSlice, ") = (")
+		if len(fields) > 1 {
+			strSlice = append(strSlice, strings.Trim(strings.Join(columns, ","), ","))
+			strSlice = append(strSlice, ") = (")
+		} else {
+			strSlice = append(strSlice, columns[0])
+			strSlice = append(strSlice, " = ")
+		}
 		valuesToDb := make([]string, len(columns))
+		var i int
 		for _, val := range columns {
 			if _, ok := fields[val]; ok {
 				value := fields[val]
 				if strings.Contains(value, "'") {
 					value = strings.Replace(value, "'", "''", -1)
 				}
-				valuesToDb = append(valuesToDb, utils.ConcatSlice([]string{"'", value, "'"}))
+				valuesToDb[i] = utils.ConcatSlice([]string{"'", value, "'"})
 			}
+			i++
 		}
-		strSlice = append(strSlice, strings.Trim(strings.Join(valuesToDb, ","), ","))
-		strSlice = append(strSlice, ") WHERE id = ")
+		if len(fields) > 1 {
+			strSlice = append(strSlice, strings.Trim(strings.Join(valuesToDb, ","), ","))
+			strSlice = append(strSlice, ") ")
+		} else {
+			strSlice = append(strSlice, valuesToDb[0])
+			strSlice = append(strSlice, " ")
+		}
+		strSlice = append(strSlice, "WHERE id = ")
 		strSlice = append(strSlice, id)
 		strSlice = append(strSlice, " RETURNING id;")
 		queryStr := utils.ConcatSlice(strSlice)

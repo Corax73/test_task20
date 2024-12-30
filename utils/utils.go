@@ -36,6 +36,8 @@ func ConcatSlice(strSlice []string) string {
 	return resp
 }
 
+// CompareMapsByStringKeys for map-arguments, checks the keys of the first argument that contain non-empty values
+// ​​to see if they are present in the second argument.
 func CompareMapsByStringKeys(map1, map2 map[string]string) bool {
 	var resp bool
 	len1 := len(map1)
@@ -55,6 +57,7 @@ func CompareMapsByStringKeys(map1, map2 map[string]string) bool {
 	return resp
 }
 
+// GetMapKeysWithValue returns from the argument map, a map with keys with non-empty values.
 func GetMapKeysWithValue(mapArg map[string]string) []string {
 	var resp []string
 	if len(mapArg) > 0 {
@@ -67,6 +70,7 @@ func GetMapKeysWithValue(mapArg map[string]string) []string {
 	return resp
 }
 
+// GetMapValues from the passed map returns a slice with its non-empty values.
 func GetMapValues(mapArg map[string]string) []string {
 	var resp []string
 	if len(mapArg) > 0 {
@@ -79,6 +83,7 @@ func GetMapValues(mapArg map[string]string) []string {
 	return resp
 }
 
+// GetIndexByStrValue returns the integer index of the passed value in the passed slice; if the value is missing, then -1.
 func GetIndexByStrValue(data []string, value string) int {
 	resp := -1
 	for i, val := range data {
@@ -90,6 +95,7 @@ func GetIndexByStrValue(data []string, value string) int {
 	return resp
 }
 
+// SqlToMap the values ​​of the passed response structure are returned by the database as a map.
 func SqlToMap(rows *sql.Rows) []map[string]interface{} {
 	resp := make([]map[string]interface{}, 0)
 	columns, err := rows.Columns()
@@ -135,6 +141,7 @@ func SqlToMap(rows *sql.Rows) []map[string]interface{} {
 	return resp
 }
 
+// GetMapKeys returns a slice of the keys of the passed map.
 func GetMapKeys(argMap map[string]string) []string {
 	resp := make([]string, len(argMap))
 	var i int
@@ -145,6 +152,7 @@ func GetMapKeys(argMap map[string]string) []string {
 	return resp
 }
 
+// PresenceMapKeysInOtherMap returns a Boolean answer whether the keys of the first passed card are contained in the second.
 func PresenceMapKeysInOtherMap(map1, map2 map[string]string) bool {
 	var resp bool
 	keys1 := GetMapKeys(map1)
@@ -160,6 +168,7 @@ func PresenceMapKeysInOtherMap(map1, map2 map[string]string) bool {
 	return resp
 }
 
+// GetMapWithoutKeys returns the transferred map without the transferred key.
 func GetMapWithoutKeys(map1 map[string]string, exceptKeys []string) map[string]string {
 	resp := make(map[string]string, len(map1)-len(exceptKeys))
 	for k, v := range map1 {

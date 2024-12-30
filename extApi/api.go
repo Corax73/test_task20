@@ -49,10 +49,12 @@ func (router *ExtRouter) checkEnv() bool {
 	return resp
 }
 
+// consoleOutput displays the time, route and request method to the console.
 func (router *ExtRouter) consoleOutput(r *http.Request) {
 	fmt.Println(strings.Join([]string{time.Now().Format(time.RFC3339), r.Method, r.RequestURI, r.UserAgent()}, " "))
 }
 
+// getOneSongs fake method to enrich the entity.
 func (router *ExtRouter) getOneSongs(w http.ResponseWriter, r *http.Request) {
 	response := make(map[string]string)
 	params := router.initProcess(w, r, false)

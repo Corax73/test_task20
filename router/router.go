@@ -19,6 +19,7 @@ type Router struct {
 	*mux.Router
 }
 
+// @var response stub for answers on routes.
 var response map[string]interface{}
 
 func (router *Router) Init() *Router {
@@ -26,12 +27,13 @@ func (router *Router) Init() *Router {
 	r.HandleFunc("/songs/", router.getSongs).Methods("GET")
 	r.HandleFunc("/songs/{id:[0-9]+}", router.getOneSongs).Methods("GET")
 	r.HandleFunc("/songs/{id:[0-9]+}/couplet/{couplet_number:[0-9]+}", router.getOneCouplet).Methods("GET")
-	r.HandleFunc("/songs/", router.CreateSong).Methods("POST")
+	r.HandleFunc("/songs/", router.createSong).Methods("POST")
 	r.HandleFunc("/songs/{id:[0-9]+}", router.updateSong).Methods("PUT")
 	r.HandleFunc("/songs/{id:[0-9]+}", router.deleteSong).Methods("DELETE")
 	return &Router{r}
 }
 
+// initProcess returns a map of request parameters, causes console output on request.
 func (router *Router) initProcess(w http.ResponseWriter, r *http.Request, getPost bool) map[string]string {
 	var resp map[string]string
 	w.Header().Set("Content-Type", "application/json")
@@ -82,6 +84,7 @@ func (router *Router) initProcess(w http.ResponseWriter, r *http.Request, getPos
 	return resp
 }
 
+// checkEnv looks for a key `CONSOLE_OUT` in the .env file and returns true if its value is true.
 func (router *Router) checkEnv() bool {
 	var resp bool
 	envData := utils.GetConfFromEnvFile()
@@ -91,10 +94,12 @@ func (router *Router) checkEnv() bool {
 	return resp
 }
 
+// consoleOutput displays the time, route and request method to the console.
 func (router *Router) consoleOutput(r *http.Request) {
 	fmt.Println(strings.Join([]string{time.Now().Format(time.RFC3339), r.Method, r.RequestURI, r.UserAgent()}, " "))
 }
 
+// getSongs returns a list of entities, can use limit and offset parameters.
 func (router *Router) getSongs(w http.ResponseWriter, r *http.Request) {
 	params := router.initProcess(w, r, false)
 	songModel := (*&models.Song{}).Init()
@@ -102,6 +107,7 @@ func (router *Router) getSongs(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+// getOneSongs returns entity data by parameter `id`.
 func (router *Router) getOneSongs(w http.ResponseWriter, r *http.Request) {
 	params := router.initProcess(w, r, false)
 	id, err := strconv.Atoi(params["id"])
@@ -114,7 +120,9 @@ func (router *Router) getOneSongs(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func (router *Router) CreateSong(w http.ResponseWriter, r *http.Request) {
+// createSong by post parameters creates an entity, you, if the model implements the interface,
+// then a request is made to enrich the entity data.
+func (router *Router) createSong(w http.ResponseWriter, r *http.Request) {
 	response := map[string]string{}
 	params := router.initProcess(w, r, true)
 	if group, ok := params["group"]; ok && group != "" {
@@ -181,6 +189,7 @@ func (router *Router) CreateSong(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+// deleteSong deletes an entity using the parameter `id`.
 func (router *Router) deleteSong(w http.ResponseWriter, r *http.Request) {
 	params := router.initProcess(w, r, false)
 	id, err := strconv.Atoi(params["id"])
@@ -193,6 +202,7 @@ func (router *Router) deleteSong(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+// getOneCouplet returns the text of the song by verses using parameters `id` and `couplet_number`.
 func (router *Router) getOneCouplet(w http.ResponseWriter, r *http.Request) {
 	params := router.initProcess(w, r, false)
 	id, err := strconv.Atoi(params["id"])
@@ -210,6 +220,7 @@ func (router *Router) getOneCouplet(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+// updateSong updates entity.
 func (router *Router) updateSong(w http.ResponseWriter, r *http.Request) {
 	params := router.initProcess(w, r, true)
 	if _, ok := params["id"]; ok {

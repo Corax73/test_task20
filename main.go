@@ -8,6 +8,7 @@ import (
 	"songLibrary/models"
 	"songLibrary/repository"
 	"songLibrary/router"
+	"songLibrary/utils"
 	"strings"
 	"sync"
 
@@ -34,10 +35,19 @@ func main() {
 	var wg sync.WaitGroup
 	errChan := make(chan error, 1)
 	defer close(errChan)
+	mainPort := ":8080"
+	fake3dApiPort := ":8082"
+	envData := utils.GetConfFromEnvFile()
+	if val, ok := envData["MAIN_PORT"]; ok {
+		mainPort = utils.ConcatSlice([]string{":", val})
+	}
+	if val, ok := envData["FAKE_3D_API_PORT"]; ok {
+		fake3dApiPort = utils.ConcatSlice([]string{":", val})
+	}
 	defer wg.Wait()
 	wg.Add(1)
 	go func(errChan chan<- error, handler http.Handler) {
-		errChan <- http.ListenAndServe(":8000", handler)
+		errChan <- http.ListenAndServe(mainPort, handler)
 		defer wg.Done()
 	}(errChan, r)
 
@@ -50,7 +60,13 @@ func main() {
 				check = false
 			} else {
 				if !invitationPrinted {
-					fmt.Println(strings.Join([]string{"started ", termlink.Link("http://localhost:8000", "http://localhost:8000")}, " "))
+					fmt.Println(strings.Join([]string{"started ",
+						termlink.Link(
+							utils.ConcatSlice([]string{"http://localhost", mainPort}),
+							utils.ConcatSlice([]string{"http://localhost", mainPort}),
+						)},
+						" ",
+					))
 					invitationPrinted = true
 				}
 			}
@@ -63,7 +79,7 @@ func main() {
 	defer wg.Wait()
 	wg.Add(1)
 	go func(errChanExt chan<- error, handler http.Handler) {
-		errChanExt <- http.ListenAndServe(":8082", handler)
+		errChanExt <- http.ListenAndServe(fake3dApiPort, handler)
 		defer wg.Done()
 	}(errChan, rExt)
 
@@ -75,7 +91,13 @@ func main() {
 			checkExt = false
 		} else {
 			if !invitationPrintedExt {
-				fmt.Println(strings.Join([]string{"started ", termlink.Link("http://localhost:8082", "http://localhost:8082")}, " "))
+				fmt.Println(strings.Join([]string{"started ",
+					termlink.Link(
+						utils.ConcatSlice([]string{"http://localhost", fake3dApiPort}),
+						utils.ConcatSlice([]string{"http://localhost", fake3dApiPort}),
+					)},
+					" ",
+				))
 				invitationPrintedExt = true
 			}
 		}

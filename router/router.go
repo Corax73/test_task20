@@ -30,6 +30,7 @@ func (router *Router) Init() *Router {
 	r.HandleFunc("/songs/", router.createSong).Methods("POST")
 	r.HandleFunc("/songs/{id:[0-9]+}", router.updateSong).Methods("PUT")
 	r.HandleFunc("/songs/{id:[0-9]+}", router.deleteSong).Methods("DELETE")
+	r.PathPrefix("/swagger/").Handler(http.StripPrefix("/swagger/", http.FileServer(http.Dir("./swagger/"))))
 	return &Router{r}
 }
 

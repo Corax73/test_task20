@@ -1,0 +1,50 @@
+openapi: 3.0.3
+info:
+  title: Swagger Go api - OpenAPI 3.0
+  version: 1.0.11
+servers:
+  - url: http://localhost:8000
+paths:
+  /songs/:
+    post:
+      tags:
+        - songs
+      summary: Add a new songs
+      description: Add a new songs
+      operationId: addsongs
+      requestBody:
+        description: Create a new songs
+        required: true
+        content:
+          application/json:
+            schema:
+              required:
+                - "group"
+                - "song"
+              properties:
+                group:
+                  description: Group
+                  example: Group-0
+                  type: string
+                song:
+                  description: Song
+                  example: Song-0
+                  type: string
+              type: object
+      responses:
+        "200":
+          description: Successful operation
+        "400":
+          description: Invalid input
+        "422":
+          description: Validation exception
+    get:
+      tags:
+        - songs
+      summary: get songs
+      description: Returns list
+      responses:
+        "200":
+          description: successful operation
+        "400":
+          description: Invalid route
